@@ -1,0 +1,123 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "srvcs-log10",
+    "description": "",
+    "license": {
+      "name": "Apache-2.0",
+      "identifier": "Apache-2.0"
+    },
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [],
+        "summary": "`GET /` — service identity (srvcs service standard).",
+        "operationId": "index",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Info"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [],
+        "summary": "`POST /` — compute `log10(value)`.",
+        "description": "Input validation is delegated to `srvcs-isnumber` over HTTP (the single\nsource of truth for \"is this a number\"). Both integers and floats are valid\ninput: this is a floating-point service and the result is an `f64`. The\nbase-10 logarithm is undefined for non-positive inputs, so `value <= 0.0`\nyields a `422` domain error. If the dependency is unreachable, this service\nreports itself degraded rather than guessing.",
+        "operationId": "evaluate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Log10Response"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "value is not a number, or is non-positive"
+          },
+          "500": {
+            "description": "value passed validation but is not representable as a number"
+          },
+          "503": {
+            "description": "a dependency is unavailable"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "EvalRequest": {
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "properties": {
+          "value": {
+            "type": "object"
+          }
+        }
+      },
+      "Info": {
+        "type": "object",
+        "required": [
+          "service",
+          "concern",
+          "depends_on"
+        ],
+        "properties": {
+          "concern": {
+            "type": "string"
+          },
+          "depends_on": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "service": {
+            "type": "string"
+          }
+        }
+      },
+      "Log10Response": {
+        "type": "object",
+        "required": [
+          "value",
+          "result"
+        ],
+        "properties": {
+          "result": {
+            "type": "number",
+            "format": "double"
+          },
+          "value": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}
